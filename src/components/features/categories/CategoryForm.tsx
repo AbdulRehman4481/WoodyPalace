@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ImageUpload } from '@/components/ui/image-upload';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createCategorySchema, updateCategorySchema } from '@/lib/validations';
@@ -42,6 +43,7 @@ export function CategoryForm({ category, onSubmit, onCancel, loading = false, de
       name: category.name,
       description: category.description || '',
       slug: category.slug,
+      image: category.image || '',
       parentId: category.parentId || '',
       isActive: category.isActive,
       sortOrder: category.sortOrder,
@@ -49,6 +51,7 @@ export function CategoryForm({ category, onSubmit, onCancel, loading = false, de
       name: '',
       description: '',
       slug: '',
+      image: '',
       parentId: defaultParentId || '',
       isActive: true,
       sortOrder: 0,
@@ -98,6 +101,7 @@ export function CategoryForm({ category, onSubmit, onCancel, loading = false, de
         ...data,
         parentId: data.parentId === '' ? undefined : data.parentId,
         description: data.description === '' ? undefined : data.description,
+        image: data.image === '' ? undefined : data.image,
       };
 
       await onSubmit(cleanedData);
@@ -158,6 +162,18 @@ export function CategoryForm({ category, onSubmit, onCancel, loading = false, de
                 />
                 {errors.description && (
                   <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+                )}
+              </div>
+
+              <div>
+                <ImageUpload
+                  value={watch('image')}
+                  onChange={(url) => setValue('image', url || '')}
+                  label="Category Image"
+                  description="Upload an image to represent this category"
+                />
+                {errors.image && (
+                  <p className="text-sm text-red-600 mt-1">{errors.image.message}</p>
                 )}
               </div>
 
@@ -265,40 +281,53 @@ export function CategoryForm({ category, onSubmit, onCancel, loading = false, de
               <CardTitle>Preview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  {watch('parentId') ? (
-                    <FolderOpen className="h-4 w-4 text-blue-500" />
-                  ) : (
-                    <Folder className="h-4 w-4 text-gray-400" />
-                  )}
-                  <span className="font-medium text-sm">
-                    {watchedName || 'Category Name'}
-                  </span>
-                </div>
-                {watchedSlug && (
-                  <p className="text-xs text-gray-500">
-                    /{watchedSlug}
-                  </p>
+              <div className="space-y-3">
+                {/* Category Image Preview */}
+                {watch('image') && (
+                  <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      src={watch('image')}
+                      alt="Category preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
-                {watch('description') && (
-                  <p className="text-xs text-gray-600">
-                    {watch('description')}
-                  </p>
-                )}
-                <div className="flex items-center space-x-2">
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    watch('isActive') 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {watch('isActive') ? 'Active' : 'Inactive'}
-                  </span>
-                  {watch('parentId') && (
-                    <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-                      Subcategory
+                
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    {watch('parentId') ? (
+                      <FolderOpen className="h-4 w-4 text-blue-500" />
+                    ) : (
+                      <Folder className="h-4 w-4 text-gray-400" />
+                    )}
+                    <span className="font-medium text-sm">
+                      {watchedName || 'Category Name'}
                     </span>
+                  </div>
+                  {watchedSlug && (
+                    <p className="text-xs text-gray-500">
+                      /{watchedSlug}
+                    </p>
                   )}
+                  {watch('description') && (
+                    <p className="text-xs text-gray-600">
+                      {watch('description')}
+                    </p>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      watch('isActive') 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {watch('isActive') ? 'Active' : 'Inactive'}
+                    </span>
+                    {watch('parentId') && (
+                      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+                        Subcategory
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

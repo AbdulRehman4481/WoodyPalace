@@ -55,6 +55,7 @@ model Category {
   name        String
   description String?
   slug        String    @unique
+  image       String?   // Category image URL
   parentId    String?
   isActive    Boolean   @default(true)
   sortOrder   Int       @default(0)

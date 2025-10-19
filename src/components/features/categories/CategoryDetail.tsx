@@ -15,9 +15,11 @@ import {
   Folder,
   FolderOpen,
   Users,
-  Plus
+  Plus,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 interface CategoryDetailProps {
   category: Category;
@@ -115,6 +117,27 @@ export function CategoryDetail({ category }: CategoryDetailProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Category Image */}
+          {category.image && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Category Image</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative w-full max-w-md aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                  <Image
+                    src={category.image}
+                    alt={category.name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    unoptimized={category.image.includes('cloudinary.com')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Description */}
           {category.description && (
             <Card>

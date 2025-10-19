@@ -3,6 +3,7 @@ export interface Category {
   name: string;
   description?: string;
   slug: string;
+  image?: string;
   parentId?: string;
   isActive: boolean;
   sortOrder: number;
@@ -17,6 +18,7 @@ export interface CreateCategoryRequest {
   name: string;
   description?: string;
   slug: string;
+  image?: string;
   parentId?: string;
   isActive?: boolean;
   sortOrder?: number;
@@ -26,6 +28,7 @@ export interface UpdateCategoryRequest {
   name?: string;
   description?: string;
   slug?: string;
+  image?: string;
   parentId?: string;
   isActive?: boolean;
   sortOrder?: number;
@@ -42,6 +45,7 @@ export interface CategoryTree {
   name: string;
   slug: string;
   description?: string;
+  image?: string;
   isActive: boolean;
   sortOrder: number;
   productCount: number;

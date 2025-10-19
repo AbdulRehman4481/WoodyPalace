@@ -14,8 +14,10 @@ import {
   Calendar,
   Folder,
   FolderOpen,
-  Users
+  Users,
+  Image as ImageIcon
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface CategoryCardProps {
   category: Category;
@@ -84,6 +86,20 @@ export function CategoryCard({ category, onAction, showActions = true }: Categor
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Category Image */}
+        {category.image && (
+          <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <Image
+              src={category.image}
+              alt={category.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              unoptimized={category.image.includes('cloudinary.com')}
+            />
+          </div>
+        )}
+
         {/* Description */}
         {category.description && (
           <p className="text-sm text-gray-600 line-clamp-2" title={category.description}>
