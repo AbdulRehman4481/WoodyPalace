@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,150 +7,138 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Admin User model
 model AdminUser {
-  id           String    @id @default(cuid())
-  email        String    @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   passwordHash String
   name         String
-  role         String    @default("ADMIN")
-  isActive     Boolean   @default(true)
+  role         String     @default("ADMIN")
+  isActive     Boolean    @default(true)
   lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  // Relations
-  auditLogs AuditLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  auditLogs    AuditLog[]
 
   @@map("admin_users")
 }
 
-// Product model
 model Product {
-  id                String   @id @default(cuid())
+  id                String            @id @default(cuid())
   name              String
   description       String?
-  price             Decimal  @db.Decimal(10, 2)
-  sku               String   @unique
-  inventoryQuantity Int      @default(0)
-  isActive          Boolean  @default(true)
-  isDiscontinued    Boolean  @default(false)
+  price             Decimal           @db.Decimal(10, 2)
+  sku               String            @unique
+  inventoryQuantity Int               @default(0)
+  isActive          Boolean           @default(true)
+  isDiscontinued    Boolean           @default(false)
   images            String[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relations
-  productCategories ProductCategory[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  brand             String?
+  rating            Decimal           @default(0) @db.Decimal(3, 2)
+  reviewCount       Int               @default(0)
+  vendorId          String?
+  cart_items        cart_items[]
   orderItems        OrderItem[]
+  productCategories ProductCategory[]
+  product_images    product_images[]
+  vendors           vendors?          @relation(fields: [vendorId], references: [id])
+  reviews           reviews[]
+  wishlist_items    wishlist_items[]
 
   @@map("products")
 }
 
-// Category model
 model Category {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  slug        String    @unique
-  image       String?   // Category image URL
-  parentId    String?
-  isActive    Boolean   @default(true)
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Self-referencing relation
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-
-  // Relations
+  id                String            @id @default(cuid())
+  name              String
+  description       String?
+  slug              String            @unique
+  parentId          String?
+  isActive          Boolean           @default(true)
+  sortOrder         Int               @default(0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  image             String?
+  parent            Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children          Category[]        @relation("CategoryHierarchy")
   productCategories ProductCategory[]
 
   @@map("categories")
 }
 
-// Product-Category junction table
 model ProductCategory {
   id         String   @id @default(cuid())
   productId  String
   categoryId String
   isPrimary  Boolean  @default(false)
   createdAt  DateTime @default(now())
-
-  // Relations
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, categoryId])
   @@map("product_categories")
 }
 
-// Customer model
 model Customer {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  firstName   String
-  lastName    String
-  phone       String?
-  address     Json? // Embedded address object
-  isActive    Boolean   @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Relations
-  orders     Order[]
+  id             String           @id @default(cuid())
+  email          String           @unique
+  firstName      String
+  lastName       String
+  phone          String?
+  address        Json?
+  isActive       Boolean          @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  cart_items     cart_items[]
+  orders         Order[]
+  reviews        reviews[]
+  wishlist_items wishlist_items[]
 
   @@map("customers")
 }
 
-// Order model
 model Order {
-  id              String      @id @default(cuid())
-  orderNumber     String      @unique
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
   customerId      String
-  status          OrderStatus @default(PENDING)
-  subtotal        Decimal     @db.Decimal(10, 2)
-  taxAmount       Decimal     @db.Decimal(10, 2)
-  shippingAmount  Decimal     @db.Decimal(10, 2)
-  totalAmount     Decimal     @db.Decimal(10, 2)
-  shippingAddress Json        // Embedded address object
-  billingAddress  Json        // Embedded address object
+  status          OrderStatus   @default(PENDING)
+  subtotal        Decimal       @db.Decimal(10, 2)
+  taxAmount       Decimal       @db.Decimal(10, 2)
+  shippingAmount  Decimal       @db.Decimal(10, 2)
+  totalAmount     Decimal       @db.Decimal(10, 2)
+  shippingAddress Json
+  billingAddress  Json
   paymentStatus   PaymentStatus @default(PENDING)
   notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  // Relations
-  customer  Customer   @relation(fields: [customerId], references: [id])
-  orderItems OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  orderItems      OrderItem[]
+  customer        Customer      @relation(fields: [customerId], references: [id])
 
   @@map("orders")
 }
 
-// Order Item model
 model OrderItem {
-  id              String   @id @default(cuid())
-  orderId         String
-  productId       String
-  productName     String
-  productSku      String
-  quantity        Int
-  unitPrice       Decimal  @db.Decimal(10, 2)
-  totalPrice      Decimal  @db.Decimal(10, 2)
-  isDiscontinued  Boolean  @default(false)
-  createdAt       DateTime @default(now())
-
-  // Relations
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String
+  productName    String
+  productSku     String
+  quantity       Int
+  unitPrice      Decimal  @db.Decimal(10, 2)
+  totalPrice     Decimal  @db.Decimal(10, 2)
+  isDiscontinued Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product  @relation(fields: [productId], references: [id])
 
   @@map("order_items")
 }
 
-// Audit Log model
 model AuditLog {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   action      String
   entityType  String
   entityId    String
@@ -162,15 +147,103 @@ model AuditLog {
   adminUserId String
   ipAddress   String?
   userAgent   String?
-  createdAt   DateTime @default(now())
-
-  // Relations
-  adminUser AdminUser @relation(fields: [adminUserId], references: [id])
+  createdAt   DateTime  @default(now())
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id])
 
   @@map("audit_logs")
 }
 
-// Enums
+model blogs {
+  id            String    @id
+  title         String
+  slug          String    @unique
+  excerpt       String?
+  content       String
+  featuredImage String?
+  author        String
+  category      String?
+  tags          String[]
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime
+}
+
+model cart_items {
+  id         String   @id
+  customerId String
+  productId  String
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  customers  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+}
+
+model newsletters {
+  id        String   @id
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model product_images {
+  id        String   @id
+  productId String
+  imageUrl  String
+  altText   String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  products  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model reviews {
+  id         String   @id
+  productId  String
+  customerId String
+  rating     Int
+  title      String?
+  comment    String?
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  customers  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, customerId])
+}
+
+model vendors {
+  id          String    @id
+  name        String
+  description String?
+  logo        String?
+  banner      String?
+  email       String?
+  phone       String?
+  address     Json?
+  rating      Decimal   @default(0) @db.Decimal(3, 2)
+  reviewCount Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  products    Product[]
+}
+
+model wishlist_items {
+  id         String   @id
+  customerId String
+  productId  String
+  createdAt  DateTime @default(now())
+  customers  Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
