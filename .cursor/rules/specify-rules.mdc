@@ -1,0 +1,27 @@
+﻿# myapp Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-10-07
+
+## Active Technologies
+- TypeScript 5.x with Next.js 15.5.4 + Next.js 15, React 19, PostgreSQL, Prisma ORM, Zod validation, Tailwind CSS (001-i-would-like)
+- PostgreSQL via Prisma ORM (no changes required) (002-i-already-have)
+
+## Project Structure
+```
+backend/
+frontend/
+tests/
+```
+
+## Commands
+npm test; npm run lint
+
+## Code Style
+TypeScript 5.x with Next.js 15.5.4: Follow standard conventions
+
+## Recent Changes
+- 002-i-already-have: Added TypeScript 5.x with Next.js 15.5.4
+- 001-i-would-like: Added TypeScript 5.x with Next.js 15.5.4 + Next.js 15, React 19, PostgreSQL, Prisma ORM, Zod validation, Tailwind CSS
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
