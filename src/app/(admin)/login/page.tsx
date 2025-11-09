@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from '@/lib/toast';
 import { Package } from 'lucide-react';
 
@@ -132,7 +133,15 @@ export default function LoginPage() {
           </div>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-white/90">
+              Don't have an account?{' '}
+              <Link href="/register" className="font-medium text-white hover:text-blue-200 underline">
+                Sign up
+              </Link>
+            </p>
+          </div>
           <div className="glass-card p-4 border border-white/30 shadow-xl">
             <p className="text-sm font-semibold text-gray-900 mb-2">
               Demo Credentials
