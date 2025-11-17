@@ -1,3 +1,5 @@
+export type HomePageSection = 'BEST_SELLERS' | 'LATEST_DEALS' | 'TRENDING_THIS_WEEK' | 'TOP_SELLING_PRODUCTS';
+
 export interface Product {
   id: string;
   name: string;
@@ -9,6 +11,8 @@ export interface Product {
   isDiscontinued: boolean;
   images: string[];
   categories?: ProductCategory[];
+  homePageSection?: HomePageSection | null;
+  discountPercentage?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +48,8 @@ export interface CreateProductRequest {
   isActive?: boolean;
   images?: string[];
   categoryIds?: string[];
+  homePageSection?: HomePageSection | null;
+  discountPercentage?: number | null;
 }
 
 export interface UpdateProductRequest {
@@ -56,6 +62,8 @@ export interface UpdateProductRequest {
   isDiscontinued?: boolean;
   images?: string[];
   categoryIds?: string[];
+  homePageSection?: HomePageSection | null;
+  discountPercentage?: number | null;
 }
 
 export interface CreateCategoryRequest {

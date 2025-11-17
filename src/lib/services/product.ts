@@ -14,6 +14,10 @@ export class ProductService {
         inventoryQuantity: data.inventoryQuantity || 0,
         isActive: data.isActive ?? true,
         images: data.images || [],
+        homePageSection: data.homePageSection || null,
+        discountPercentage: data.discountPercentage !== undefined && data.discountPercentage !== null 
+          ? data.discountPercentage 
+          : null,
         productCategories: data.categoryIds?.length ? {
           create: data.categoryIds.map(categoryId => ({
             categoryId,
@@ -70,6 +74,10 @@ export class ProductService {
     const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
     const skip = (page - 1) * limit;
 
+    // Whitelist of valid sort fields to prevent SQL injection and invalid field errors
+    const validSortFields = ['createdAt', 'updatedAt', 'name', 'price', 'inventoryQuantity', 'sku'] as const;
+    const safeSortBy = validSortFields.includes(sortBy as any) ? sortBy : 'createdAt';
+
     const where: any = {};
 
     if (filters.categoryId) {
@@ -118,7 +126,7 @@ export class ProductService {
             },
           },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [safeSortBy]: sortOrder },
         skip,
         take: limit,
       }),
@@ -141,6 +149,10 @@ export class ProductService {
   ): Promise<PaginatedResponse<Product>> {
     const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc' } = pagination;
     const skip = (page - 1) * limit;
+
+    // Whitelist of valid sort fields to prevent SQL injection and invalid field errors
+    const validSortFields = ['createdAt', 'updatedAt', 'name', 'price', 'inventoryQuantity', 'sku'] as const;
+    const safeSortBy = validSortFields.includes(sortBy as any) ? sortBy : 'createdAt';
 
     const where: any = {
       OR: [
@@ -187,7 +199,7 @@ export class ProductService {
             },
           },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [safeSortBy]: sortOrder },
         skip,
         take: limit,
       }),
@@ -234,18 +246,24 @@ export class ProductService {
       }
     }
 
+    const updateData: any = {};
+    
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.price !== undefined) updateData.price = data.price;
+    if (data.sku !== undefined) updateData.sku = data.sku;
+    if (data.inventoryQuantity !== undefined) updateData.inventoryQuantity = data.inventoryQuantity;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.isDiscontinued !== undefined) updateData.isDiscontinued = data.isDiscontinued;
+    if (data.images !== undefined) updateData.images = data.images;
+    if (data.homePageSection !== undefined) updateData.homePageSection = data.homePageSection;
+    if (data.discountPercentage !== undefined) {
+      updateData.discountPercentage = data.discountPercentage !== null ? data.discountPercentage : null;
+    }
+
     const product = await db.product.update({
       where: { id },
-      data: {
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        sku: data.sku,
-        inventoryQuantity: data.inventoryQuantity,
-        isActive: data.isActive,
-        isDiscontinued: data.isDiscontinued,
-        images: data.images,
-      },
+      data: updateData,
       include: {
         productCategories: {
           include: {
@@ -375,6 +393,10 @@ export class ProductService {
       isActive: dbProduct.isActive,
       isDiscontinued: dbProduct.isDiscontinued,
       images: dbProduct.images,
+      homePageSection: dbProduct.homePageSection || null,
+      discountPercentage: dbProduct.discountPercentage !== null && dbProduct.discountPercentage !== undefined
+        ? Number(dbProduct.discountPercentage)
+        : null,
       categories: dbProduct.productCategories?.map((pc: any) => ({
         id: pc.id,
         productId: pc.productId,

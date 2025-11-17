@@ -1,10 +1,20 @@
 import { z } from 'zod';
+import { BannerType } from '@/types/banner';
+import { HomePageSection } from '@/types/product';
 
 // Common schemas
 export const paginationSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+// Product-specific pagination schema with validated sortBy
+export const productPaginationSchema = z.object({
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(100).default(20),
+  sortBy: z.enum(['createdAt', 'updatedAt', 'name', 'price', 'inventoryQuantity', 'sku']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
@@ -48,6 +58,17 @@ export const createProductSchema = z.object({
   isActive: z.boolean().default(true),
   images: z.array(z.string().min(1, 'Image URL is required')).default([]),
   categoryIds: z.array(z.string()).default([]),
+  homePageSection: z.enum(['BEST_SELLERS', 'LATEST_DEALS', 'TRENDING_THIS_WEEK', 'TOP_SELLING_PRODUCTS']).nullable().optional(),
+  discountPercentage: z.coerce.number().min(0, 'Discount must be non-negative').max(100, 'Discount cannot exceed 100%').nullable().optional(),
+}).refine((data) => {
+  // If homePageSection is LATEST_DEALS, discountPercentage is required
+  if (data.homePageSection === 'LATEST_DEALS') {
+    return data.discountPercentage !== null && data.discountPercentage !== undefined;
+  }
+  return true;
+}, {
+  message: 'Discount percentage is required when section is Latest Deals',
+  path: ['discountPercentage'],
 });
 
 export const updateProductSchema = z.object({
@@ -60,6 +81,17 @@ export const updateProductSchema = z.object({
   isDiscontinued: z.boolean().optional(),
   images: z.array(z.string().min(1, 'Image URL is required')).optional(),
   categoryIds: z.array(z.string()).optional(),
+  homePageSection: z.enum(['BEST_SELLERS', 'LATEST_DEALS', 'TRENDING_THIS_WEEK', 'TOP_SELLING_PRODUCTS']).nullable().optional(),
+  discountPercentage: z.coerce.number().min(0, 'Discount must be non-negative').max(100, 'Discount cannot exceed 100%').nullable().optional(),
+}).refine((data) => {
+  // If homePageSection is LATEST_DEALS, discountPercentage is required
+  if (data.homePageSection === 'LATEST_DEALS') {
+    return data.discountPercentage !== null && data.discountPercentage !== undefined;
+  }
+  return true;
+}, {
+  message: 'Discount percentage is required when section is Latest Deals',
+  path: ['discountPercentage'],
 });
 
 export const productFiltersSchema = z.object({
@@ -226,6 +258,72 @@ export const fileUploadSchema = z.object({
   path: z.string(),
 });
 
+// Banner schemas
+export const createBannerSchema = z.object({
+  topTitle: z.string().max(100, 'Top title must be less than 100 characters').optional(),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  description: z.string().max(500, 'Description must be less than 500 characters').optional(),
+  discount: z.string().max(50, 'Discount must be less than 50 characters').optional(),
+  image: z.string().url('Valid image URL is required'),
+  imageWidth: z.coerce.number().int().min(100).max(2000).optional().default(1200),
+  imageHeight: z.coerce.number().int().min(100).max(2000).optional().default(600),
+  type: z.nativeEnum(BannerType, { required_error: 'Banner type is required' }),
+  isCarousel: z.boolean().optional().default(false),
+  bannerColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color format').optional().default('#FFFFFF'),
+  titleColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color format').optional().default('#000000'),
+  descriptionColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color format').optional().default('#666666'),
+  buttonColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color format').optional().default('#3B82F6'),
+  buttonTextColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid hex color format').optional().default('#FFFFFF'),
+  isActive: z.boolean().optional().default(true),
+  sortOrder: z.coerce.number().int().min(0).optional().default(0),
+});
+
+export const updateBannerSchema = createBannerSchema.partial();
+
+export const bannerFiltersSchema = z.object({
+  type: z.nativeEnum(BannerType).optional(),
+  isActive: z.boolean().optional(),
+});
+
+// Deal schemas
+export const createDealSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  description: z.string().max(1000, 'Description must be less than 1000 characters').optional(),
+  startDate: z.coerce.date({ required_error: 'Start date is required' }),
+  endDate: z.coerce.date({ required_error: 'End date is required' }),
+  massiveDealProductId: z.string().optional(),
+  productIds: z.array(z.string()).optional().default([]),
+  isActive: z.boolean().optional().default(true),
+}).refine((data) => data.endDate > data.startDate, {
+  message: 'End date must be after start date',
+  path: ['endDate'],
+});
+
+export const updateDealSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters').optional(),
+  description: z.string().max(1000, 'Description must be less than 1000 characters').optional(),
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+  massiveDealProductId: z.string().optional(),
+  productIds: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+}).refine((data) => {
+  if (data.startDate && data.endDate) {
+    return data.endDate > data.startDate;
+  }
+  return true;
+}, {
+  message: 'End date must be after start date',
+  path: ['endDate'],
+});
+
+export const dealFiltersSchema = z.object({
+  isActive: z.boolean().optional(),
+  isUpcoming: z.boolean().optional(),
+  isActiveNow: z.boolean().optional(),
+  isExpired: z.boolean().optional(),
+});
+
 // Export types
 export type CreateAdminUserInput = z.infer<typeof createAdminUserSchema>;
 export type UpdateAdminUserInput = z.infer<typeof updateAdminUserSchema>;
@@ -250,3 +348,11 @@ export type CustomerFiltersInput = z.infer<typeof customerFiltersSchema>;
 export type PaginationInput = z.infer<typeof paginationSchema>;
 export type SearchInput = z.infer<typeof searchSchema>;
 export type FileUploadInput = z.infer<typeof fileUploadSchema>;
+
+export type CreateBannerInput = z.infer<typeof createBannerSchema>;
+export type UpdateBannerInput = z.infer<typeof updateBannerSchema>;
+export type BannerFiltersInput = z.infer<typeof bannerFiltersSchema>;
+
+export type CreateDealInput = z.infer<typeof createDealSchema>;
+export type UpdateDealInput = z.infer<typeof updateDealSchema>;
+export type DealFiltersInput = z.infer<typeof dealFiltersSchema>;

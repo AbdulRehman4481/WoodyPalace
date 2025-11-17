@@ -14,6 +14,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Image as ImageIcon,
+  Tag,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
@@ -25,6 +27,8 @@ const navigation = [
   { name: 'Orders', href: '/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Categories', href: '/categories', icon: FolderTree },
+  { name: 'Banners', href: '/banners', icon: ImageIcon },
+  { name: 'Deals', href: '/deals', icon: Tag },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
 ];
 

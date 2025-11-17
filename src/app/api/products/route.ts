@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { withAdminAuth } from '@/lib/api-handler';
 import { ProductService } from '@/lib/services/product';
 import { createSuccessResponse, createErrorResponse, createValidationErrorResponse } from '@/lib/api-response';
-import { createProductSchema, productFiltersSchema, paginationSchema } from '@/lib/validations';
+import { createProductSchema, productFiltersSchema, productPaginationSchema } from '@/lib/validations';
 import { AuditLogger } from '@/lib/audit-logger';
 import { getCurrentUser } from '@/lib/auth-helpers';
 
@@ -31,7 +31,7 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
 
     // Validate filters and pagination
     const validatedFilters = productFiltersSchema.parse(filters);
-    const validatedPagination = paginationSchema.parse(pagination);
+    const validatedPagination = productPaginationSchema.parse(pagination);
 
     let result;
     if (query) {

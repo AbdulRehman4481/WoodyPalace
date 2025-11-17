@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Product, CreateProductRequest, UpdateProductRequest } from '@/types/product';
+import { Product, CreateProductRequest, UpdateProductRequest, HomePageSection } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,8 @@ export function ProductForm({ product, onSubmit, onCancel, loading = false }: Pr
       isDiscontinued: product.isDiscontinued,
       images: product.images,
       categoryIds: product.categories?.map(c => c.categoryId) || [],
+      homePageSection: product.homePageSection || null,
+      discountPercentage: product.discountPercentage || null,
     } : {
       name: '',
       description: '',
@@ -66,10 +68,13 @@ export function ProductForm({ product, onSubmit, onCancel, loading = false }: Pr
       isDiscontinued: false,
       images: [],
       categoryIds: [],
+      homePageSection: null,
+      discountPercentage: null,
     },
   });
 
   const watchedPrice = watch('price');
+  const watchedHomePageSection = watch('homePageSection');
 
   // Load categories
   useEffect(() => {
@@ -271,6 +276,56 @@ export function ProductForm({ product, onSubmit, onCancel, loading = false }: Pr
                   <p className="text-sm text-red-600 mt-1">{errors.inventoryQuantity.message}</p>
                 )}
               </div>
+
+              <div>
+                <Label htmlFor="homePageSection">Home Page Section</Label>
+                <Select
+                  value={watchedHomePageSection || 'none'}
+                  onValueChange={(value) => {
+                    const sectionValue = value === 'none' ? null : value as HomePageSection;
+                    setValue('homePageSection', sectionValue);
+                    // Clear discount if section is not LATEST_DEALS
+                    if (sectionValue !== 'LATEST_DEALS') {
+                      setValue('discountPercentage', null);
+                    }
+                  }}
+                >
+                  <SelectTrigger id="homePageSection">
+                    <SelectValue placeholder="Select a section (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="BEST_SELLERS">Best Sellers</SelectItem>
+                    <SelectItem value="LATEST_DEALS">Latest Deals</SelectItem>
+                    <SelectItem value="TRENDING_THIS_WEEK">Trending This Week</SelectItem>
+                    <SelectItem value="TOP_SELLING_PRODUCTS">Top Selling Products</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.homePageSection && (
+                  <p className="text-sm text-red-600 mt-1">{errors.homePageSection.message}</p>
+                )}
+              </div>
+
+              {watchedHomePageSection === 'LATEST_DEALS' && (
+                <div>
+                  <Label htmlFor="discountPercentage">Discount Percentage *</Label>
+                  <Input
+                    id="discountPercentage"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    {...register('discountPercentage', { valueAsNumber: true })}
+                    placeholder="0.00"
+                  />
+                  {errors.discountPercentage && (
+                    <p className="text-sm text-red-600 mt-1">{errors.discountPercentage.message}</p>
+                  )}
+                  <p className="text-sm text-gray-600 mt-1">
+                    Enter discount percentage (0-100)
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
