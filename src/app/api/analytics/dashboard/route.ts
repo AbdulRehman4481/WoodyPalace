@@ -45,10 +45,16 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
       filters.status = status;
     }
 
-    const dashboardAnalytics = await AnalyticsService.getDashboardAnalytics(filters);
+    const [dashboardAnalytics, realTimeMetrics] = await Promise.all([
+      AnalyticsService.getDashboardAnalytics(filters),
+      AnalyticsService.getRealTimeMetrics(),
+    ]);
     
     return createSuccessResponse({
-      data: dashboardAnalytics,
+      data: {
+        ...dashboardAnalytics,
+        realTime: realTimeMetrics,
+      },
       filters,
       generatedAt: new Date(),
     });

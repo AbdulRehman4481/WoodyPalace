@@ -30,7 +30,7 @@ export function CategoryDetail({ category }: CategoryDetailProps) {
   const [deleting, setDeleting] = useState(false);
 
   const handleEdit = () => {
-    router.push(`/admin/categories/${category.id}/edit`);
+    router.push(`/categories/${category.id}/edit`);
   };
 
   const handleDelete = async () => {

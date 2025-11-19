@@ -283,7 +283,17 @@ export class AnalyticsService {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const [ordersToday, revenueToday, topSellingProduct] = await Promise.all([
+    // Get last hour for "current" metrics
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+    const [
+      ordersToday, 
+      revenueToday, 
+      topSellingProduct,
+      currentOrders,
+      recentCustomers
+    ] = await Promise.all([
+      // Orders today
       db.order.count({
         where: {
           createdAt: {
@@ -292,6 +302,7 @@ export class AnalyticsService {
           },
         },
       }),
+      // Revenue today
       db.order.aggregate({
         where: {
           createdAt: {
@@ -301,12 +312,36 @@ export class AnalyticsService {
         },
         _sum: { totalAmount: true },
       }),
+      // Top selling product today
       this.getTopSellingProductToday(),
+      // Current orders (last hour)
+      db.order.count({
+        where: {
+          createdAt: {
+            gte: oneHourAgo,
+          },
+          status: {
+            in: ['PENDING', 'PROCESSING', 'SHIPPED'],
+          },
+        },
+      }),
+      // Recent unique customers (last hour) - approximate active users
+      db.order.findMany({
+        where: {
+          createdAt: {
+            gte: oneHourAgo,
+          },
+        },
+        select: {
+          customerId: true,
+        },
+        distinct: ['customerId'],
+      }),
     ]);
 
     return {
-      activeUsers: 0, // TODO: Implement active users tracking
-      currentOrders: 0, // TODO: Implement current orders tracking
+      activeUsers: recentCustomers.length,
+      currentOrders,
       revenueToday: Number(revenueToday._sum.totalAmount || 0),
       ordersToday,
       topSellingProduct,
@@ -316,8 +351,44 @@ export class AnalyticsService {
 
   // Helper methods
   private static async getSalesByPeriod(dateRange?: DateRange): Promise<SalesByPeriod[]> {
-    // Implementation for sales by period
-    return [];
+    const defaultRange = dateRange || {
+      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+      to: new Date(),
+    };
+
+    const orders = await db.order.findMany({
+      where: {
+        createdAt: {
+          gte: defaultRange.from,
+          lte: defaultRange.to,
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    // Group by day
+    const salesByDay: Record<string, { revenue: number; orders: number; orderValues: number[] }> = {};
+    
+    orders.forEach(order => {
+      const dateKey = order.createdAt.toISOString().split('T')[0];
+      if (!salesByDay[dateKey]) {
+        salesByDay[dateKey] = { revenue: 0, orders: 0, orderValues: [] };
+      }
+      salesByDay[dateKey].revenue += Number(order.totalAmount);
+      salesByDay[dateKey].orders += 1;
+      salesByDay[dateKey].orderValues.push(Number(order.totalAmount));
+    });
+
+    return Object.entries(salesByDay)
+      .map(([period, data]) => ({
+        period,
+        revenue: data.revenue,
+        orders: data.orders,
+        averageOrderValue: data.orders > 0 ? data.revenue / data.orders : 0,
+      }))
+      .sort((a, b) => a.period.localeCompare(b.period));
   }
 
   private static async getSalesByCategory(dateRange?: DateRange, categoryId?: string): Promise<SalesByCategory[]> {
@@ -326,13 +397,88 @@ export class AnalyticsService {
   }
 
   private static async getTopProducts(dateRange?: DateRange, categoryId?: string): Promise<TopProduct[]> {
-    // Implementation for top products
-    return [];
+    const whereClause: any = {};
+    
+    if (dateRange) {
+      whereClause.order = {
+        createdAt: {
+          gte: dateRange.from,
+          lte: dateRange.to,
+        },
+      };
+    }
+
+    if (categoryId) {
+      whereClause.product = {
+        categories: {
+          some: {
+            categoryId,
+          },
+        },
+      };
+    }
+
+    const orderItems = await db.orderItem.groupBy({
+      by: ['productId', 'productName'],
+      where: whereClause,
+      _sum: {
+        quantity: true,
+        totalPrice: true,
+      },
+      _avg: {
+        unitPrice: true,
+      },
+      orderBy: {
+        _sum: {
+          totalPrice: 'desc',
+        },
+      },
+      take: 10,
+    });
+
+    return orderItems.map(item => ({
+      productId: item.productId,
+      productName: item.productName || 'Unknown Product',
+      revenue: Number(item._sum.totalPrice || 0),
+      quantitySold: Number(item._sum.quantity || 0),
+      averagePrice: Number(item._avg.unitPrice || 0),
+    }));
   }
 
   private static async getSalesTrend(dateRange?: DateRange): Promise<SalesTrend[]> {
-    // Implementation for sales trend
-    return [];
+    const defaultRange = dateRange || {
+      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+      to: new Date(),
+    };
+
+    const orders = await db.order.findMany({
+      where: {
+        createdAt: {
+          gte: defaultRange.from,
+          lte: defaultRange.to,
+        },
+      },
+    });
+
+    // Group by date
+    const salesByDate: Record<string, { revenue: number; orders: number }> = {};
+    
+    orders.forEach(order => {
+      const dateKey = order.createdAt.toISOString().split('T')[0];
+      if (!salesByDate[dateKey]) {
+        salesByDate[dateKey] = { revenue: 0, orders: 0 };
+      }
+      salesByDate[dateKey].revenue += Number(order.totalAmount);
+      salesByDate[dateKey].orders += 1;
+    });
+
+    return Object.entries(salesByDate)
+      .map(([dateStr, data]) => ({
+        date: new Date(dateStr),
+        revenue: data.revenue,
+        orders: data.orders,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
   }
 
   private static async getLowStockProducts(categoryId?: string): Promise<LowStockProduct[]> {
@@ -459,8 +605,35 @@ export class AnalyticsService {
   }
 
   private static async getTopSellingProductToday(): Promise<string> {
-    // Implementation for top selling product today
-    return 'N/A';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const topProduct = await db.orderItem.groupBy({
+      by: ['productName'],
+      where: {
+        order: {
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+      },
+      _sum: {
+        quantity: true,
+      },
+      orderBy: {
+        _sum: {
+          quantity: 'desc',
+        },
+      },
+      take: 1,
+    });
+
+    return topProduct.length > 0 && topProduct[0].productName 
+      ? topProduct[0].productName 
+      : 'No sales today';
   }
 
   private static getPreviousPeriod(dateRange?: DateRange): DateRange | undefined {
