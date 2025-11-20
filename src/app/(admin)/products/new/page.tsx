@@ -14,7 +14,7 @@ export default function NewProductPage() {
   const handleSubmit = async (data: CreateProductRequest | UpdateProductRequest) => {
     setLoading(true);
     setError(null);
-console.log("lskdfjlskdj")
+
     const createPromise = fetch('/api/products', {
       method: 'POST',
       headers: {

@@ -5,26 +5,35 @@ import { calculatePagination } from '../utils';
 
 export class ProductService {
   static async create(data: CreateProductRequest): Promise<Product> {
+    const productData: any = {
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      sku: data.sku,
+      inventoryQuantity: data.inventoryQuantity || 0,
+      isActive: data.isActive ?? true,
+      images: data.images || [],
+      productCategories: data.categoryIds?.length ? {
+        create: data.categoryIds.map(categoryId => ({
+          categoryId,
+          isPrimary: false,
+        }))
+      } : undefined,
+    };
+
+    // Only include homePageSection if it's provided (not null/undefined)
+    // This prevents errors if the column doesn't exist in the database
+    if (data.homePageSection !== undefined && data.homePageSection !== null) {
+      productData.homePageSection = data.homePageSection;
+    }
+
+    // Only include discountPercentage if it's provided
+    if (data.discountPercentage !== undefined && data.discountPercentage !== null) {
+      productData.discountPercentage = data.discountPercentage;
+    }
+
     const product = await db.product.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        sku: data.sku,
-        inventoryQuantity: data.inventoryQuantity || 0,
-        isActive: data.isActive ?? true,
-        images: data.images || [],
-        homePageSection: data.homePageSection || null,
-        discountPercentage: data.discountPercentage !== undefined && data.discountPercentage !== null 
-          ? data.discountPercentage 
-          : null,
-        productCategories: data.categoryIds?.length ? {
-          create: data.categoryIds.map(categoryId => ({
-            categoryId,
-            isPrimary: false,
-          }))
-        } : undefined,
-      },
+      data: productData,
       include: {
         productCategories: {
           include: {
@@ -256,9 +265,14 @@ export class ProductService {
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.isDiscontinued !== undefined) updateData.isDiscontinued = data.isDiscontinued;
     if (data.images !== undefined) updateData.images = data.images;
-    if (data.homePageSection !== undefined) updateData.homePageSection = data.homePageSection;
-    if (data.discountPercentage !== undefined) {
-      updateData.discountPercentage = data.discountPercentage !== null ? data.discountPercentage : null;
+    // Only include homePageSection if it's provided and not null
+    // This prevents errors if the column doesn't exist in the database
+    if (data.homePageSection !== undefined && data.homePageSection !== null) {
+      updateData.homePageSection = data.homePageSection;
+    }
+    // Only include discountPercentage if it's provided and not null
+    if (data.discountPercentage !== undefined && data.discountPercentage !== null) {
+      updateData.discountPercentage = data.discountPercentage;
     }
 
     const product = await db.product.update({
