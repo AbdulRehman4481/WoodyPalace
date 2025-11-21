@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['@prisma/client'],
+  serverExternalPackages: ['@prisma/client', '@prisma/adapter-pg'],
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
