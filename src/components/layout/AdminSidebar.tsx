@@ -41,37 +41,40 @@ export function AdminSidebar() {
   };
 
   return (
-    <div
+    <aside
       className={cn(
-        'flex flex-col h-screen text-white transition-all duration-300 border-r border-white/20 shadow-2xl',
-        'bg-gradient-to-b from-slate-900 via-purple-900 to-blue-900',
-        collapsed ? 'w-16' : 'w-64'
+        'flex flex-col h-screen border-r bg-card transition-all duration-300 ease-in-out relative',
+        collapsed ? 'w-[70px]' : 'w-64'
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10">
-        {!collapsed && (
-          <div className="flex items-center space-x-2">
-            <Package className="h-6 w-6 text-blue-500" />
-            <span className="font-bold text-lg">Admin Panel</span>
-          </div>
+      {/* Toggle Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-6 z-40 h-6 w-6 rounded-full border bg-background shadow-md hover:bg-accent hover:text-accent-foreground"
+      >
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3" />
+        ) : (
+          <ChevronLeft className="h-3 w-3" />
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-gray-400 hover:text-white hover:bg-gray-800"
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
-          )}
-        </Button>
+      </Button>
+
+      {/* Header */}
+      <div className={cn("flex items-center h-16 px-4 border-b", collapsed ? "justify-center" : "justify-start")}>
+        <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
+            <Package className="h-4 w-4" />
+          </div>
+          <span className={cn("font-bold text-lg transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+            Ecommerce
+          </span>
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
@@ -79,47 +82,63 @@ export function AdminSidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200',
+                'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative',
                 isActive
-                  ? 'gradient-primary text-white shadow-lg'
-                  : 'text-gray-200 hover:bg-white/10 hover:text-white',
-                collapsed && 'justify-center'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                collapsed ? 'justify-center' : ''
               )}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="font-medium">{item.name}</span>}
+              <item.icon className={cn("h-5 w-5 shrink-0", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-accent-foreground")} />
+              <span className={cn(
+                "font-medium whitespace-nowrap transition-all duration-300 overflow-hidden",
+                collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+              )}>
+                {item.name}
+              </span>
+              {/* Tooltip for collapsed state could go here if using Tooltip component */}
             </Link>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-white/10 space-y-1">
+      <div className="p-2 border-t space-y-1">
         <Link
           href="/settings"
           className={cn(
-            'flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-200 hover:bg-white/10 hover:text-white transition-all duration-200',
-            collapsed && 'justify-center'
+            'flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-200 group',
+            collapsed ? 'justify-center' : ''
           )}
           title={collapsed ? 'Settings' : undefined}
         >
-          <Settings className="h-5 w-5 flex-shrink-0" />
-          {!collapsed && <span className="font-medium">Settings</span>}
+          <Settings className="h-5 w-5 shrink-0" />
+          <span className={cn(
+            "font-medium whitespace-nowrap transition-all duration-300 overflow-hidden",
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+          )}>
+            Settings
+          </span>
         </Link>
         <button
           onClick={handleSignOut}
           className={cn(
-            'w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-200 hover:bg-red-500/80 hover:text-white transition-all duration-200',
-            collapsed && 'justify-center'
+            'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all duration-200 group',
+            collapsed ? 'justify-center' : ''
           )}
           title={collapsed ? 'Sign Out' : undefined}
         >
-          <LogOut className="h-5 w-5 flex-shrink-0" />
-          {!collapsed && <span className="font-medium">Sign Out</span>}
+          <LogOut className="h-5 w-5 shrink-0" />
+          <span className={cn(
+            "font-medium whitespace-nowrap transition-all duration-300 overflow-hidden",
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100"
+          )}>
+            Sign Out
+          </span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 }
 

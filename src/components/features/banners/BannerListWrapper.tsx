@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Banner, BannerType } from '@/types/banner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
-import { PageHeader } from '@/components/ui/page-header';
-import { Plus, Edit, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Image as ImageIcon, Filter } from 'lucide-react';
 import Image from 'next/image';
 import { toast } from '@/lib/toast';
+import { cn } from '@/lib/utils';
+import { LoadingSpinner } from '@/components/ui/loading';
 
 export function BannerListWrapper() {
   const router = useRouter();
@@ -78,13 +78,13 @@ export function BannerListWrapper() {
   const getTypeBadgeColor = (type: BannerType) => {
     switch (type) {
       case BannerType.NEW_ARRIVAL:
-        return 'bg-blue-500';
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case BannerType.DISCOUNT:
-        return 'bg-red-500';
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
       case BannerType.COMING_SOON:
-        return 'bg-purple-500';
+        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       default:
-        return 'bg-gray-500';
+        return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
 
@@ -103,116 +103,128 @@ export function BannerListWrapper() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Banners"
-        description="Manage website banners (New Arrival, Discount, Coming Soon)"
-        actions={[
-          {
-            label: 'Add Banner',
-            onClick: () => router.push('/banners/new'),
-            icon: Plus,
-          },
-        ]}
-      />
+      {/* Filters */}
+      <div className="glass-card p-4 rounded-xl flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Filter className="h-4 w-4" />
+          <span className="text-sm font-medium">Filters:</span>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value={BannerType.NEW_ARRIVAL}>New Arrival</SelectItem>
+              <SelectItem value={BannerType.DISCOUNT}>Discount</SelectItem>
+              <SelectItem value={BannerType.COMING_SOON}>Coming Soon</SelectItem>
+            </SelectContent>
+          </Select>
 
-      <div className="flex gap-4">
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value={BannerType.NEW_ARRIVAL}>New Arrival</SelectItem>
-            <SelectItem value={BannerType.DISCOUNT}>Discount</SelectItem>
-            <SelectItem value={BannerType.COMING_SOON}>Coming Soon</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={filterActive} onValueChange={setFilterActive}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={filterActive} onValueChange={setFilterActive}>
+            <SelectTrigger className="w-full sm:w-[180px] bg-white/5 border-white/10">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-gray-500">Loading banners...</div>
+        <div className="glass-card p-8 flex justify-center items-center min-h-[400px]">
+          <LoadingSpinner size="lg" />
         </div>
       ) : banners.length === 0 ? (
-        <EmptyState
-          title="No banners found"
-          description="Get started by creating a new banner."
-          action={
-            <Button onClick={() => router.push('/banners/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Banner
-            </Button>
-          }
-        />
+        <div className="glass-card p-8">
+          <EmptyState
+            icon={ImageIcon}
+            title="No banners found"
+            description="Get started by creating a new banner."
+            action={{
+              label: 'Add Banner',
+              onClick: () => router.push('/banners/new'),
+            }}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {banners.map((banner) => (
-            <Card key={banner.id} className="overflow-hidden">
-              <div className="relative h-48 bg-gray-100">
+            <div
+              key={banner.id}
+              className="glass-card group overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1"
+            >
+              <div className="relative h-48 bg-black/20 overflow-hidden">
                 {banner.image ? (
                   <Image
                     src={banner.image}
                     alt={banner.title}
                     fill
-                    className="object-cover"
+                    className="object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <ImageIcon className="h-12 w-12 text-gray-400" />
+                    <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
                   </div>
                 )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                 {!banner.isActive && (
-                  <div className="absolute top-2 right-2">
-                    <Badge variant="secondary">Inactive</Badge>
+                  <div className="absolute top-3 right-3">
+                    <Badge variant="secondary" className="bg-black/50 backdrop-blur-md text-white border-white/10">
+                      Inactive
+                    </Badge>
                   </div>
                 )}
+
+                <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10"
+                    onClick={() => router.push(`/banners/${banner.id}/edit`)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="h-8 w-8 bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-md border border-white/10"
+                    onClick={() => handleDelete(banner.id, banner.title)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-lg truncate flex-1">{banner.title}</h3>
-                  <Badge className={getTypeBadgeColor(banner.type)}>
+
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-semibold text-lg truncate flex-1 pr-2">{banner.title}</h3>
+                  <Badge variant="outline" className={cn("whitespace-nowrap", getTypeBadgeColor(banner.type))}>
                     {getTypeLabel(banner.type)}
                   </Badge>
                 </div>
+
                 {banner.description && (
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2 min-h-[2.5em]">
                     {banner.description}
                   </p>
                 )}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
-                    Order: {banner.sortOrder}
+
+                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                  <span className="text-xs text-muted-foreground font-medium bg-white/5 px-2 py-1 rounded-md">
+                    Sort Order: {banner.sortOrder}
                   </span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/banners/${banner.id}/edit`)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(banner.id, banner.title)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(banner.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

@@ -2,7 +2,6 @@
 
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
-import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { KeyboardShortcuts } from '@/components/ui/keyboard-shortcuts';
 import { LoadingBar } from '@/components/ui/loading-bar';
 
@@ -15,7 +14,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <div className="flex h-screen overflow-hidden">
       {/* Loading Bar */}
       <LoadingBar />
-      
+
       {/* Keyboard Shortcuts */}
       <KeyboardShortcuts />
 
@@ -27,11 +26,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Header */}
         <AdminHeader />
 
-        {/* Breadcrumbs */}
-        <Breadcrumbs />
+        {/* Breadcrumbs removed - handled by PageHeader */}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           {children}
         </main>
       </div>

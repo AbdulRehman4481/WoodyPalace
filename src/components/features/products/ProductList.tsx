@@ -3,16 +3,28 @@
 import React, { useState, useEffect } from 'react';
 import { Product, ProductFilters } from '@/types/product';
 import { PaginatedResponse } from '@/types/common';
-import { ProductCard } from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Filter, X, Package } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, Filter, X, MoreHorizontal, Edit, Trash, Eye } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading';
-import { EmptyState } from '@/components/ui/empty-state';
-import Link from 'next/link';
+import { GlassTable } from '@/components/ui/GlassTable';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/utils';
 
 interface ProductListProps {
   initialProducts?: PaginatedResponse<Product>;
@@ -28,7 +40,6 @@ export function ProductList({
   onProductSelect,
   onProductEdit,
   onProductDelete,
-  onProductAdd,
   showActions = true,
 }: ProductListProps) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,8 +74,6 @@ export function ProductList({
         ...(filterParams.isDiscontinued !== undefined && { isDiscontinued: filterParams.isDiscontinued.toString() }),
         ...(filterParams.priceMin !== undefined && { priceMin: filterParams.priceMin.toString() }),
         ...(filterParams.priceMax !== undefined && { priceMax: filterParams.priceMax.toString() }),
-        ...(filterParams.inventoryMin !== undefined && { inventoryMin: filterParams.inventoryMin.toString() }),
-        ...(filterParams.inventoryMax !== undefined && { inventoryMax: filterParams.inventoryMax.toString() }),
       });
 
       const response = await fetch(`/api/products?${params}`);
@@ -113,217 +122,201 @@ export function ProductList({
     loadProducts(1, '', {});
   };
 
-  // Handle pagination
-  const handlePageChange = (page: number) => {
-    loadProducts(page, searchQuery, filters);
-  };
-
-  // Handle product actions
-  const handleProductAction = async (action: string, product: Product) => {
-    switch (action) {
-      case 'edit':
-        onProductEdit?.(product);
-        break;
-      case 'delete':
-        if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-          onProductDelete?.(product);
-        }
-        break;
-      case 'view':
-        onProductSelect?.(product);
-        break;
-    }
-  };
-
-  if (loading && products.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  const columns = [
+    {
+      header: 'Product',
+      cell: (product: Product) => (
+        <div className="flex items-center gap-3">
+          {product.images?.[0] ? (
+            <img
+              src={product.images[0]}
+              alt={product.name}
+              className="h-10 w-10 rounded-lg object-cover border border-white/10"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-white/10">
+              <span className="text-xs font-bold text-primary">
+                {product.name.substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div>
+            <p className="font-medium text-foreground">{product.name}</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+              {product.description}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Price',
+      cell: (product: Product) => (
+        <span className="font-medium">{formatCurrency(product.price)}</span>
+      ),
+    },
+    {
+      header: 'Inventory',
+      cell: (product: Product) => (
+        <Badge variant={product.inventoryQuantity > 10 ? 'outline' : 'destructive'} className="glass-border">
+          {product.inventoryQuantity} in stock
+        </Badge>
+      ),
+    },
+    {
+      header: 'Status',
+      cell: (product: Product) => (
+        <Badge
+          variant={product.isActive ? 'default' : 'secondary'}
+          className={product.isActive ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20' : ''}
+        >
+          {product.isActive ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+    },
+    {
+      header: 'Actions',
+      className: 'text-right',
+      cell: (product: Product) => (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-card">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onProductSelect?.(product)}>
+                <Eye className="mr-2 h-4 w-4" /> View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onProductEdit?.(product)}>
+                <Edit className="mr-2 h-4 w-4" /> Edit Product
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => onProductDelete?.(product)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Products</span>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-              {showActions && (
-                  <Link href='/products/new'>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
+      {/* Filters Bar */}
+      <div className="glass-card p-4 rounded-xl flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative flex-1 w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-10 bg-background/50 border-white/10 focus:border-primary/50"
+          />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => setShowFilters(!showFilters)}
+            className={showFilters ? 'bg-primary/10 border-primary/20 text-primary' : ''}
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
+        </div>
+      </div>
 
-                  Add Product
-                </Button>
-                  </Link>
-              )}
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search products by name, description, or SKU..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10"
-            />
+      {/* Expanded Filters */}
+      {showFilters && (
+        <div className="glass-card p-6 rounded-xl grid grid-cols-1 md:grid-cols-4 gap-6 animate-in slide-in-from-top-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Status</label>
+            <Select
+              value={filters.isActive?.toString() || '__all__'}
+              onValueChange={(value) => handleFilterChange('isActive', value === '__all__' ? undefined : value === 'true')}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">All Statuses</SelectItem>
+                <SelectItem value="true">Active</SelectItem>
+                <SelectItem value="false">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Filters */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
-                <Select
-                  value={filters.isActive?.toString() || '__all__'}
-                  onValueChange={(value) => handleFilterChange('isActive', value === '__all__' ? undefined : value === 'true')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All statuses</SelectItem>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Discontinued</label>
-                <Select
-                  value={filters.isDiscontinued?.toString() || '__all__'}
-                  onValueChange={(value) => handleFilterChange('isDiscontinued', value === '__all__' ? undefined : value === 'true')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All products" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All products</SelectItem>
-                    <SelectItem value="false">Active products</SelectItem>
-                    <SelectItem value="true">Discontinued</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Min Price</label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={filters.priceMin || ''}
-                  onChange={(e) => handleFilterChange('priceMin', e.target.value ? Number(e.target.value) : undefined)}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Max Price</label>
-                <Input
-                  type="number"
-                  placeholder="999.99"
-                  value={filters.priceMax || ''}
-                  onChange={(e) => handleFilterChange('priceMax', e.target.value ? Number(e.target.value) : undefined)}
-                />
-              </div>
-
-              <div className="md:col-span-4 flex justify-end">
-                <Button variant="outline" onClick={clearFilters}>
-                  <X className="h-4 w-4 mr-2" />
-                  Clear Filters
-                </Button>
-              </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Price Range</label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                placeholder="Min"
+                value={filters.priceMin || ''}
+                onChange={(e) => handleFilterChange('priceMin', e.target.value ? Number(e.target.value) : undefined)}
+              />
+              <span className="text-muted-foreground">-</span>
+              <Input
+                type="number"
+                placeholder="Max"
+                value={filters.priceMax || ''}
+                onChange={(e) => handleFilterChange('priceMax', e.target.value ? Number(e.target.value) : undefined)}
+              />
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
 
-      {/* Error State */}
-      {error && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-red-600">
-              <p>{error}</p>
-              <Button variant="outline" onClick={() => loadProducts()} className="mt-2">
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="md:col-span-4 flex justify-end">
+            <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
+        </div>
       )}
 
-      {/* Products Grid */}
-      {products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAction={handleProductAction}
-              showActions={showActions}
-            />
-          ))}
+      {/* Table */}
+      {loading && !products.length ? (
+        <div className="flex justify-center py-12">
+          <LoadingSpinner size="lg" />
         </div>
       ) : (
-        !loading && (
-          <EmptyState
-            icon={Package}
-            title="No products found"
-            description={searchQuery || Object.keys(filters).length > 0
-              ? "Try adjusting your search or filters"
-              : "Get started by adding your first product to the catalog"}
-            action={showActions ? {
-              label: "Add Product",
-              onClick: onProductAdd || (() => {}),
-            } : undefined}
-          />
-        )
+        <GlassTable
+          data={products}
+          columns={columns}
+        />
       )}
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2">
+      <div className="flex items-center justify-between px-2">
+        <p className="text-sm text-muted-foreground">
+          Showing {products.length} of {pagination.total} products
+        </p>
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => handlePageChange(pagination.page - 1)}
+            size="sm"
+            onClick={() => loadProducts(pagination.page - 1, searchQuery, filters)}
             disabled={!pagination.hasPrev}
           >
             Previous
           </Button>
-          
-          <span className="text-sm text-gray-600">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          
           <Button
             variant="outline"
-            onClick={() => handlePageChange(pagination.page + 1)}
+            size="sm"
+            onClick={() => loadProducts(pagination.page + 1, searchQuery, filters)}
             disabled={!pagination.hasNext}
           >
             Next
           </Button>
         </div>
-      )}
-
-      {/* Loading overlay */}
-      {loading && products.length > 0 && (
-        <div className="flex justify-center items-center py-4">
-          <LoadingSpinner />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

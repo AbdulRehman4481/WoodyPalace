@@ -2,21 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { CategoryTree as CategoryTreeType } from '@/types/category';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ChevronRight, 
-  ChevronDown, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Edit,
+  Trash2,
   Move,
   Package,
   Folder,
-  FolderOpen
+  FolderOpen,
+  LayoutGrid
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LoadingSpinner } from '@/components/ui/loading';
 
 interface CategoryTreeProps {
   onCategorySelect?: (category: CategoryTreeType) => void;
@@ -61,7 +62,8 @@ function CategoryTreeNode({
   const isSelected = selectedCategoryId === category.id;
   const hasChildren = category.children.length > 0;
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (hasChildren) {
       onToggleExpanded(category.id);
     }
@@ -92,107 +94,116 @@ function CategoryTreeNode({
   };
 
   return (
-    <div className="select-none">
+    <div className="select-none animate-in fade-in slide-in-from-left-2 duration-300">
       <div
         className={cn(
-          'flex items-center space-x-2 py-2 px-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors',
-          isSelected && 'bg-blue-50 border border-blue-200',
-          level > 0 && 'ml-4'
+          'group flex items-center space-x-2 py-3 px-4 rounded-xl cursor-pointer transition-all duration-200 border border-transparent',
+          isSelected
+            ? 'bg-primary/10 border-primary/20 shadow-sm'
+            : 'hover:bg-white/5 hover:border-white/10',
+          level > 0 && 'ml-6 border-l border-white/5 rounded-l-none'
         )}
-        style={{ paddingLeft: `${level * 1.5}rem` }}
         onClick={handleSelect}
       >
         {/* Expand/Collapse Button */}
-        <div className="flex items-center justify-center w-4 h-4">
+        <div className="flex items-center justify-center w-6 h-6">
           {hasChildren ? (
             <Button
               variant="ghost"
               size="sm"
-              className="h-4 w-4 p-0 hover:bg-transparent"
+              className="h-6 w-6 p-0 hover:bg-white/10 rounded-full"
               onClick={handleToggle}
             >
               {isExpanded ? (
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-3 w-3 text-muted-foreground" />
               )}
             </Button>
           ) : (
-            <div className="w-4 h-4" />
+            <div className="w-6 h-6" />
           )}
         </div>
 
         {/* Category Icon */}
-        <div className="flex items-center justify-center w-4 h-4">
+        <div className={cn(
+          "flex items-center justify-center w-8 h-8 rounded-lg transition-colors",
+          isSelected ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground group-hover:text-foreground"
+        )}>
           {hasChildren ? (
             isExpanded ? (
-              <FolderOpen className="h-4 w-4 text-blue-500" />
+              <FolderOpen className="h-4 w-4" />
             ) : (
-              <Folder className="h-4 w-4 text-blue-500" />
+              <Folder className="h-4 w-4" />
             )
           ) : (
-            <Package className="h-4 w-4 text-gray-400" />
+            <Package className="h-4 w-4" />
           )}
         </div>
 
         {/* Category Name */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium text-sm truncate">{category.name}</span>
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "font-medium text-sm truncate transition-colors",
+              isSelected ? "text-primary" : "text-foreground"
+            )}>
+              {category.name}
+            </span>
             {category.productCount > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-white/5 text-muted-foreground border-white/5">
                 {category.productCount}
               </Badge>
             )}
             {!category.isActive && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-red-500/20 text-red-500 bg-red-500/5">
                 Inactive
               </Badge>
             )}
           </div>
           {category.description && (
-            <p className="text-xs text-gray-500 truncate">{category.description}</p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{category.description}</p>
           )}
         </div>
 
         {/* Actions */}
         {showActions && (
-          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-2 group-hover:translate-x-0">
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary rounded-lg"
               onClick={handleAdd}
               title="Add subcategory"
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary rounded-lg"
               onClick={handleEdit}
               title="Edit category"
             >
-              <Edit className="h-3 w-3" />
+              <Edit className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary rounded-lg"
               onClick={handleMove}
               title="Move category"
             >
-              <Move className="h-3 w-3" />
+              <Move className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-7 w-7 p-0 hover:bg-red-500/10 hover:text-red-500 rounded-lg"
               onClick={handleDelete}
               title="Delete category"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           </div>
         )}
@@ -200,7 +211,7 @@ function CategoryTreeNode({
 
       {/* Children */}
       {isExpanded && hasChildren && (
-        <div className="ml-2">
+        <div className="ml-4 pl-4 border-l border-white/5 mt-1 space-y-1">
           {category.children.map((child) => (
             <CategoryTreeNode
               key={child.id}
@@ -270,7 +281,7 @@ export function CategoryTree({
     const newExpanded = expandedCategories.includes(categoryId)
       ? expandedCategories.filter(id => id !== categoryId)
       : [...expandedCategories, categoryId];
-    
+
     setExpandedCategories(newExpanded);
     onExpandedChange?.(newExpanded);
   };
@@ -304,53 +315,41 @@ export function CategoryTree({
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex justify-center items-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-8 flex justify-center items-center min-h-[300px]">
+        <LoadingSpinner size="lg" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-red-600">
-            <p>{error}</p>
-            <Button variant="outline" onClick={loadCategories} className="mt-2">
-              Try Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="glass-card p-8 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <Button variant="outline" onClick={loadCategories}>
+          Try Again
+        </Button>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Category Tree</span>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={expandAll}>
-              Expand All
-            </Button>
-            <Button variant="outline" size="sm" onClick={collapseAll}>
-              Collapse All
-            </Button>
-            {showActions && (
-              <Button size="sm" onClick={() => onCategoryAdd?.()}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
-            )}
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="glass-card rounded-xl overflow-hidden">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+        <div className="flex items-center gap-2">
+          <LayoutGrid className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-lg">Category Structure</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={expandAll} className="text-muted-foreground hover:text-foreground">
+            Expand All
+          </Button>
+          <Button variant="ghost" size="sm" onClick={collapseAll} className="text-muted-foreground hover:text-foreground">
+            Collapse All
+          </Button>
+        </div>
+      </div>
+
+      <div className="p-4">
         {categories.length > 0 ? (
           <div className="space-y-1">
             {categories.map((category) => (
@@ -371,18 +370,17 @@ export function CategoryTree({
             ))}
           </div>
         ) : (
-          <div className="text-center text-gray-500 py-8">
-            <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center text-muted-foreground py-12">
+            <Package className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <p>No categories found</p>
             {showActions && (
-              <Button className="mt-2" onClick={() => onCategoryAdd?.()}>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button variant="link" className="mt-2 text-primary" onClick={() => onCategoryAdd?.()}>
                 Add your first category
               </Button>
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

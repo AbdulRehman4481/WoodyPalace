@@ -18,23 +18,14 @@ export function AdminHeader() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const getPageTitle = () => {
-    if (pathname === '/') return 'Dashboard';
-    if (pathname.startsWith('/products')) return 'Products';
-    if (pathname.startsWith('/orders')) return 'Orders';
-    if (pathname.startsWith('/customers')) return 'Customers';
-    if (pathname.startsWith('/categories')) return 'Categories';
-    if (pathname.startsWith('/analytics')) return 'Analytics';
-    return 'Admin';
-  };
+
 
   return (
     <header className="glass-card border-b border-slate-200 px-6 py-4 shadow-md">
       <div className="flex items-center justify-between">
         {/* Page Title */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
-        </div>
+        {/* Page Title - Removed (handled by PageHeader) */}
+        <div />
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
