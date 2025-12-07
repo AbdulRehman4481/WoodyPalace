@@ -59,7 +59,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   };
 
   const handleBack = () => {
-    router.push('/admin/products');
+    router.push('/products');
   };
 
   const getStatusBadge = () => {

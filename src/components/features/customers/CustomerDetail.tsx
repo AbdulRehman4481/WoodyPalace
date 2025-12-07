@@ -53,11 +53,11 @@ export function CustomerDetail({ customer }: CustomerDetailProps) {
   }, [customer.id]);
 
   const handleBack = () => {
-    router.push('/admin/customers');
+    router.push('/customers');
   };
 
   const handleEdit = () => {
-    router.push(`/admin/customers/${customer.id}/edit`);
+    router.push(`/customers/${customer.id}/edit`);
   };
 
   const handleToggleStatus = async () => {
@@ -80,7 +80,7 @@ export function CustomerDetail({ customer }: CustomerDetailProps) {
   };
 
   const handleViewOrder = (orderId: string) => {
-    router.push(`/admin/orders/${orderId}`);
+    router.push(`/orders/${orderId}`);
   };
 
   // Get status badge

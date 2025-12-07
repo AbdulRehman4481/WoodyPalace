@@ -62,7 +62,7 @@ async function OrderEditContent({ id }: { id: string }) {
     };
 
     const handleCancel = () => {
-      redirect(`/admin/orders/${id}`);
+      redirect(`/orders/${id}`);
     };
 
     return (

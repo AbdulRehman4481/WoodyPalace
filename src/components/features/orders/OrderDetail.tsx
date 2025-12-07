@@ -32,11 +32,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
   const router = useRouter();
 
   const handleBack = () => {
-    router.push('/admin/orders');
+    router.push('/orders');
   };
 
   const handleEdit = () => {
-    router.push(`/admin/orders/${order.id}/edit`);
+    router.push(`/orders/${order.id}/edit`);
   };
 
   // Get status badge color and icon

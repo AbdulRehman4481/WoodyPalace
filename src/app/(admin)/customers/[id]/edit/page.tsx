@@ -62,7 +62,7 @@ async function CustomerEditContent({ id }: { id: string }) {
     };
 
     const handleCancel = () => {
-      redirect(`/admin/customers/${id}`);
+      redirect(`/customers/${id}`);
     };
 
     return (

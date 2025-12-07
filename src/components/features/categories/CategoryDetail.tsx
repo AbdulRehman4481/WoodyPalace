@@ -45,7 +45,7 @@ export function CategoryDetail({ category }: CategoryDetailProps) {
       });
 
       if (response.ok) {
-        router.push('/admin/categories');
+        router.push('/categories');
       } else {
         const data = await response.json();
         alert(data.error || 'Failed to delete category');
@@ -59,15 +59,15 @@ export function CategoryDetail({ category }: CategoryDetailProps) {
   };
 
   const handleBack = () => {
-    router.push('/admin/categories');
+    router.push('/categories');
   };
 
   const handleAddSubcategory = () => {
-    router.push(`/admin/categories/new?parentId=${category.id}`);
+    router.push(`/categories/new?parentId=${category.id}`);
   };
 
   const handleViewProducts = () => {
-    router.push(`/admin/products?categoryId=${category.id}`);
+    router.push(`/products?categoryId=${category.id}`);
   };
 
   const getStatusBadge = () => {
@@ -183,7 +183,7 @@ export function CategoryDetail({ category }: CategoryDetailProps) {
                     <div
                       key={child.id}
                       className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                      onClick={() => router.push(`/admin/categories/${child.id}`)}
+                      onClick={() => router.push(`/categories/${child.id}`)}
                     >
                       {child.children && child.children.length > 0 ? (
                         <FolderOpen className="h-5 w-5 text-blue-500" />
