@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
-import { 
-  ArrowLeft, 
-  Edit, 
-  Trash2, 
-  Package, 
-  DollarSign, 
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Package,
+  DollarSign,
   Calendar,
   Image as ImageIcon,
   Eye,
@@ -30,7 +30,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
   const [showAllImages, setShowAllImages] = useState(false);
 
   const handleEdit = () => {
-    router.push(`/admin/products/${product.id}/edit`);
+    router.push(`/products/${product.id}/edit`);
   };
 
   const handleDelete = async () => {
@@ -45,7 +45,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
       });
 
       if (response.ok) {
-        router.push('/admin/products');
+        router.push('/products');
       } else {
         const data = await response.json();
         alert(data.error || 'Failed to delete product');
@@ -239,8 +239,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Product
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleDelete}
                 disabled={deleting}
                 className="w-full"
@@ -268,8 +268,8 @@ export function ProductDetail({ product }: ProductDetailProps) {
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
                 <span className="capitalize">
-                  {product.isDiscontinued ? 'Discontinued' : 
-                   product.isActive ? 'Active' : 'Inactive'}
+                  {product.isDiscontinued ? 'Discontinued' :
+                    product.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
             </CardContent>
